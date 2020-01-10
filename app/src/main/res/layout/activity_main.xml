@@ -14,7 +14,7 @@
         android:text="Please drag the image below and pinch to zoom!"
         android:layout_gravity="center_horizontal"/>
 
-    <com.facebook.samples.zoomable.ZoomableDraweeView
+    <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/imageView"
         android:layout_width="400dp"
         android:layout_height="400dp"

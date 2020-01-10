@@ -1,29 +1,20 @@
 package org.cooltey.instagramlikepinchzoom
 
-import android.app.Dialog
-import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
-import android.view.GestureDetector.SimpleOnGestureListener
 import android.view.MotionEvent
-import android.view.ViewGroup
-import android.view.Window
-import android.widget.RelativeLayout
-import android.widget.Toast
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.drawable.ProgressBarDrawable
 import com.facebook.drawee.drawable.ScalingUtils
-import com.facebook.drawee.generic.GenericDraweeHierarchy
 import com.facebook.drawee.generic.GenericDraweeHierarchyBuilder
-import com.facebook.drawee.interfaces.DraweeController
-import com.facebook.samples.zoomable.ZoomableController
-import com.facebook.samples.zoomable.ZoomableDraweeView
 import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var imageZoomHelper: ImageZoomHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,41 +36,18 @@ class MainActivity : AppCompatActivity() {
         imageView.controller = controller
         imageView.hierarchy = hierarchy
 
-//        imageView.zoomableController.setListener(object: ZoomableController.Listener {
-//            override fun onTransformEnd(transform: Matrix?) {
-//                Toast.makeText(this@MainActivity, "onTransformEnd", Toast.LENGTH_SHORT).show()
-//            }
-//
-//            override fun onTransformChanged(transform: Matrix?) {
-//                Toast.makeText(this@MainActivity, "onTransformChanged", Toast.LENGTH_SHORT).show()
-//            }
-//
-//            override fun onTransformBegin(transform: Matrix?) {
-//                Toast.makeText(this@MainActivity, "onTransformBegin", Toast.LENGTH_SHORT).show()
-//            }
-//
-//        })
-//
-//        imageView.setTapListener( object : SimpleOnGestureListener() {
-//
-//            override fun onDown(e: MotionEvent): Boolean {
-//                Toast.makeText(this@MainActivity, "onDown", Toast.LENGTH_SHORT).show()
-//
-//                imageView.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
-//                imageView.layoutParams.width = ViewGroup.LayoutParams.MATCH_PARENT
-//                imageView.requestLayout()
-//                return super.onDown(e)
-//            }
-//        })
+        imageZoomHelper = ImageZoomHelper(this)
+        ImageZoomHelper.setViewZoomable(imageView)
+        imageZoomHelper.addOnZoomListener(object: ImageZoomHelper.OnZoomListener {
+            override fun onImageZoomStarted(view: View?) {
+            }
+
+            override fun onImageZoomEnded(view: View?) {
+            }
+        })
     }
 
-    private fun showDialog(hierarchy: GenericDraweeHierarchy, draweeController: DraweeController) {
-        val view = ZoomableDraweeView(this)
-        val dialog =  Dialog(this, android.R.style.Theme_Translucent_NoTitleBar)
-        dialog.window!!.requestFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(view)
-        view.controller = draweeController
-        view.hierarchy = hierarchy
-        dialog.show()
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        return imageZoomHelper.onDispatchTouchEvent(ev) || super.dispatchTouchEvent(ev)
     }
 }
