@@ -1,6 +1,5 @@
 package org.cooltey.instagramlikepinchzoom
 
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.MotionEvent
@@ -13,18 +12,17 @@ import com.facebook.drawee.generic.GenericDraweeHierarchyBuilder
 import kotlinx.android.synthetic.main.activity_main.*
 
 
-class MainActivity : AppCompatActivity() {
+class CardActivity : AppCompatActivity() {
 
     private lateinit var imageZoomHelper: ImageZoomHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Fresco.initialize(this)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_card)
 
         val uri: Uri =
-            Uri.parse("https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/" +
-                    "Physicist_Stephen_Hawking_in_Zero_Gravity_NASA.jpg/2880px-Physicist_Stephen_Hawking_in_Zero_Gravity_NASA.jpg")
+            Uri.parse("https://upload.wikimedia.org/wikipedia/commons/f/f9/Mandarin_duck_in_Central_Park_%2830282%29_-_cropped.jpg")
 
         // setup image controller and hierarchy
         val controller = Fresco.newDraweeControllerBuilder().setUri(uri).build()
@@ -45,10 +43,6 @@ class MainActivity : AppCompatActivity() {
             override fun onImageZoomEnded(view: View?) {
             }
         })
-
-        nextButton.setOnClickListener {
-            startActivity(Intent(this, CardActivity::class.java))
-        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {

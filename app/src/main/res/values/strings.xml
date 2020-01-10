@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">InstagramLikePinchZoom</string>
     <string name="description">Please drag the image below and pinch to zoom!</string>
+    <string name="card_title">This is a card</string>
+    <string name="card_description">Use constraintLayout to prevent view pushes up</string>
+    <string name="button_card_activity">CardActivity</string>
+    <string name="button_main_activity">MainActivity</string>
 </resources>
