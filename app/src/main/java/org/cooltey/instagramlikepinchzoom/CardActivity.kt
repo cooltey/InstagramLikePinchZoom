@@ -1,15 +1,17 @@
 package org.cooltey.instagramlikepinchzoom
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.facebook.drawee.backends.pipeline.Fresco
-import com.facebook.drawee.drawable.ProgressBarDrawable
 import com.facebook.drawee.drawable.ScalingUtils
 import com.facebook.drawee.generic.GenericDraweeHierarchyBuilder
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_card.*
+import kotlinx.android.synthetic.main.activity_main.imageView
+import kotlinx.android.synthetic.main.activity_main.viewPagerActivityButton
 
 
 class CardActivity : AppCompatActivity() {
@@ -18,7 +20,6 @@ class CardActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Fresco.initialize(this)
         setContentView(R.layout.activity_card)
 
         val uri: Uri =
@@ -43,6 +44,14 @@ class CardActivity : AppCompatActivity() {
             override fun onImageZoomEnded(view: View?) {
             }
         })
+
+        mainActivityButton.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+
+        viewPagerActivityButton.setOnClickListener {
+            startActivity(Intent(this, ViewPagerActivity::class.java))
+        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
