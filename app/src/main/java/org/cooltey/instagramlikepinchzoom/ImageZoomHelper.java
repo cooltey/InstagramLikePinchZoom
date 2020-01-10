@@ -21,7 +21,6 @@ import java.util.List;
 
 /**
  * Created by viventhraarao on 25/11/2016.
- * Updated by Cooltey Feng on 01/09/2020.
  * Credit: https://github.com/okaybroda/ImageZoom/blob/master/library/src/main/java/com/viven/imagezoom/ImageZoomHelper.java
  */
 
