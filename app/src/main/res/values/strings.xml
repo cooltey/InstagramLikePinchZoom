@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">InstagramLikePinchZoom</string>
+    <string name="description">Please drag the image below and pinch to zoom!</string>
 </resources>

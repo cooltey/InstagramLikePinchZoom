@@ -14,17 +14,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
 import java.lang.ref.WeakReference;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by viventhraarao on 25/11/2016.
+ * Updated by Cooltey Feng on 01/09/2020.
  * Credit: https://github.com/okaybroda/ImageZoom/blob/master/library/src/main/java/com/viven/imagezoom/ImageZoomHelper.java
  */
 
@@ -278,7 +275,7 @@ public class ImageZoomHelper {
                         animatedFraction) + topMarginStart);
     }
 
-    void updateZoomableViewMargins(float left, float top) {
+    private void updateZoomableViewMargins(float left, float top) {
         if (zoomableView != null && zoomableViewFrameLP != null) {
             zoomableViewFrameLP.leftMargin = (int) left;
             zoomableViewFrameLP.topMargin = (int) top;
@@ -357,10 +354,10 @@ public class ImageZoomHelper {
     /**
      * Get distance between two points
      *
-     * @param x1
-     * @param x2
-     * @param y1
-     * @param y2
+     * @param x1 distance x from
+     * @param x2 distance x end
+     * @param y1 distance y from
+     * @param y2 distance y end
      * @return distance
      */
     private double getDistance(double x1, double x2, double y1, double y2) {
@@ -391,7 +388,7 @@ public class ImageZoomHelper {
 
                 if (child.getTag(R.id.unzoomable) == null) {
                     Rect visibleRect = new Rect();
-                    int location[] = new int[2];
+                    int[] location = new int[2];
                     child.getLocationOnScreen(location);
                     visibleRect.left = location[0];
                     visibleRect.top = location[1];
@@ -415,7 +412,7 @@ public class ImageZoomHelper {
     /**
      * Set view to be zoomable
      *
-     * @param view
+     * @param view the view to be zoomable
      */
     public static void setViewZoomable(View view) {
         view.setTag(R.id.zoomable, new Object());
@@ -424,8 +421,8 @@ public class ImageZoomHelper {
     /**
      * Enable or disable zoom for view and it's children
      *
-     * @param view
-     * @param enabled
+     * @param view the view to be zoomable
+     * @param enabled enable the zoomable
      */
     public static void setZoom(View view, boolean enabled) {
         view.setTag(R.id.unzoomable, enabled ? null : new Object());
