@@ -4,16 +4,16 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.app.Activity;
-import android.app.Dialog;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
-import android.os.Build;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import androidx.core.view.ViewCompat;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -29,7 +29,6 @@ public class ImageZoomHelper {
     private ViewGroup parentOfZoomableView;
     private ViewGroup.LayoutParams zoomableViewLP;
     private FrameLayout.LayoutParams zoomableViewFrameLP;
-    private Dialog dialog;
     private View placeholderView;
     private int viewIndex;
     private View darkView;
@@ -38,6 +37,7 @@ public class ImageZoomHelper {
     private int[] originalXY;
     private int pivotX = 0, pivotY = 0;
     private WeakReference<Activity> activityWeakReference;
+    private ViewGroup decorView;
 
     private boolean isAnimatingDismiss = false;
 
@@ -49,8 +49,9 @@ public class ImageZoomHelper {
 
     public boolean onDispatchTouchEvent(MotionEvent ev) {
         Activity activity;
-        if ((activity = activityWeakReference.get()) == null)
+        if ((activity = activityWeakReference.get()) == null) {
             return false;
+        }
 
         if (ev.getPointerCount() == 2) {
             if (zoomableView == null) {
@@ -75,13 +76,8 @@ public class ImageZoomHelper {
                             FrameLayout.LayoutParams.MATCH_PARENT,
                             FrameLayout.LayoutParams.MATCH_PARENT));
 
-                    // the Dialog that will hold the FrameLayout
-                    dialog = new Dialog(activity,
-                            android.R.style.Theme_Translucent_NoTitleBar_Fullscreen);
-                    dialog.addContentView(frameLayout,
-                            new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.MATCH_PARENT));
-                    dialog.show();
+                    decorView = (ViewGroup)activity.getWindow().getDecorView();
+                    decorView.addView(frameLayout);
 
                     // get the parent of the zoomable view and get it's index and layout param
                     parentOfZoomableView = (ViewGroup) zoomableView.getParent();
@@ -101,14 +97,8 @@ public class ImageZoomHelper {
                     // this avoids flickering when adding/removing views
                     zoomableView.setDrawingCacheEnabled(true);
 
-                    BitmapDrawable placeholderDrawable = new BitmapDrawable(
-                            activity.getResources(),
-                            Bitmap.createBitmap(zoomableView.getDrawingCache()));
-                    if (Build.VERSION.SDK_INT >= 16) {
-                        placeholderView.setBackground(placeholderDrawable);
-                    } else {
-                        placeholderView.setBackgroundDrawable(placeholderDrawable);
-                    }
+                    ViewCompat.setBackground(placeholderView, new BitmapDrawable(
+                            activity.getResources(), Bitmap.createBitmap(zoomableView.getDrawingCache())));
 
                     // placeholderView takes the place of zoomableView temporarily
                     parentOfZoomableView.addView(placeholderView, zoomableViewLP);
@@ -122,13 +112,8 @@ public class ImageZoomHelper {
                     zoomableView.post(new Runnable() {
                         @Override
                         public void run() {
-                            if (dialog != null) {
-                                if (Build.VERSION.SDK_INT >= 16) {
-                                    placeholderView.setBackground(null);
-                                } else {
-                                    placeholderView.setBackgroundDrawable(null);
-                                }
-
+                            if (decorView != null) {
+                                ViewCompat.setBackground(placeholderView, null);
                                 zoomableView.setDrawingCacheEnabled(false);
                             }
                         }
@@ -262,16 +247,12 @@ public class ImageZoomHelper {
                                     float scaleXStart, int leftMarginStart,
                                     int topMarginStart, float scaleXEnd, float scaleYEnd,
                                     int leftMarginEnd, int topMarginEnd) {
-        zoomableView.setScaleX(((scaleXEnd - scaleXStart) *
-                animatedFraction) + scaleXStart);
-        zoomableView.setScaleY(((scaleYEnd - scaleYStart) *
-                animatedFraction) + scaleYStart);
+        zoomableView.setScaleX(((scaleXEnd - scaleXStart) * animatedFraction) + scaleXStart);
+        zoomableView.setScaleY(((scaleYEnd - scaleYStart) * animatedFraction) + scaleYStart);
 
         updateZoomableViewMargins(
-                ((leftMarginEnd - leftMarginStart) *
-                        animatedFraction) + leftMarginStart,
-                ((topMarginEnd - topMarginStart) *
-                        animatedFraction) + topMarginStart);
+                ((leftMarginEnd - leftMarginStart) * animatedFraction) + leftMarginStart,
+                ((topMarginEnd - topMarginStart) * animatedFraction) + topMarginStart);
     }
 
     private void updateZoomableViewMargins(float left, float top) {
@@ -292,14 +273,8 @@ public class ImageZoomHelper {
             zoomableView.setVisibility(View.VISIBLE);
             zoomableView.setDrawingCacheEnabled(true);
 
-            BitmapDrawable placeholderDrawable = new BitmapDrawable(
-                    zoomableView.getResources(),
-                    Bitmap.createBitmap(zoomableView.getDrawingCache()));
-            if (Build.VERSION.SDK_INT >= 16) {
-                placeholderView.setBackground(placeholderDrawable);
-            } else {
-                placeholderView.setBackgroundDrawable(placeholderDrawable);
-            }
+            ViewCompat.setBackground(placeholderView, new BitmapDrawable(zoomableView.getResources(),
+                    Bitmap.createBitmap(zoomableView.getDrawingCache())));
 
             ViewGroup parent = (ViewGroup) zoomableView.getParent();
             parent.removeView(zoomableView);
@@ -307,12 +282,15 @@ public class ImageZoomHelper {
             this.parentOfZoomableView.removeView(placeholderView);
             final View finalZoomView = zoomableView;
             zoomableView.setDrawingCacheEnabled(false);
-            dismissDialog();
+            decorView = null;
+            darkView = null;
+            resetOriginalViewAfterZoom();
             finalZoomView.invalidate();
         } else {
-            dismissDialog();
+            decorView = null;
+            darkView = null;
+            resetOriginalViewAfterZoom();
         }
-
         isAnimatingDismiss = false;
     }
 
@@ -331,16 +309,6 @@ public class ImageZoomHelper {
             else
                 onZoomListener.onImageZoomEnded(zoomableView);
         }
-    }
-
-    private void dismissDialog() {
-        if (dialog != null) {
-            dialog.dismiss();
-            dialog = null;
-        }
-
-        darkView = null;
-        resetOriginalViewAfterZoom();
     }
 
     private void resetOriginalViewAfterZoom() {
@@ -396,10 +364,7 @@ public class ImageZoomHelper {
 
                     if (visibleRect.contains((int) pointerCoords1.x, (int) pointerCoords1.y) &&
                             visibleRect.contains((int) pointerCoords2.x, (int) pointerCoords2.y)) {
-                        if (child.getTag(R.id.zoomable) != null)
-                            return child;
-                        else
-                            return findZoomableView(event, child);
+                        return child.getTag(R.id.zoomable) != null ? child : findZoomableView(event, child);
                     }
                 }
             }
@@ -428,10 +393,7 @@ public class ImageZoomHelper {
     }
 
     public interface OnZoomListener {
-
         void onImageZoomStarted(View view);
-
         void onImageZoomEnded(View view);
-
     }
 }
