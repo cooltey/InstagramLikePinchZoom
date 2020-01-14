@@ -20,11 +20,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by viventhraarao on 25/11/2016.
- * Credit: https://github.com/okaybroda/ImageZoom/blob/master/library/src/main/java/com/viven/imagezoom/ImageZoomHelper.java
+ * Based on:
+ * https://github.com/okaybroda/ImageZoom/blob/master/library/src/main/java/com/viven/imagezoom/ImageZoomHelper.java
  */
-
 public class ImageZoomHelper {
+    private static int FLAG_ZOOMABLE = 1;
+    private static int FLAG_UNZOOMABLE = 2;
+
     private View zoomableView = null;
     private ViewGroup parentOfZoomableView;
     private ViewGroup.LayoutParams zoomableViewLP;
@@ -47,9 +49,10 @@ public class ImageZoomHelper {
         this.activityWeakReference = new WeakReference<>(activity);
     }
 
+    @SuppressWarnings("checkstyle:methodlength")
     public boolean onDispatchTouchEvent(MotionEvent ev) {
-        Activity activity;
-        if ((activity = activityWeakReference.get()) == null) {
+        Activity activity = activityWeakReference.get();
+        if (activity == null) {
             return false;
         }
 
@@ -79,7 +82,7 @@ public class ImageZoomHelper {
                     decorView = (ViewGroup)activity.getWindow().getDecorView();
                     decorView.addView(frameLayout);
 
-                    // get the parent of the zoomable view and get it's index and layout param
+                    // get the parent of the zoomable view and get its index and layout param
                     parentOfZoomableView = (ViewGroup) zoomableView.getParent();
                     viewIndex = parentOfZoomableView.indexOfChild(zoomableView);
                     this.zoomableViewLP = zoomableView.getLayoutParams();
@@ -103,19 +106,15 @@ public class ImageZoomHelper {
                     // placeholderView takes the place of zoomableView temporarily
                     parentOfZoomableView.addView(placeholderView, zoomableViewLP);
 
-                    // zoomableView has to be removed from parent view before being added to it's
-                    // new parent
+                    // zoomableView has to be removed from parent view before being added to its new parent
                     parentOfZoomableView.removeView(zoomableView);
                     frameLayout.addView(zoomableView, zoomableViewFrameLP);
 
                     // using a post to remove placeholder's drawing cache
-                    zoomableView.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (decorView != null) {
-                                ViewCompat.setBackground(placeholderView, null);
-                                zoomableView.setDrawingCacheEnabled(false);
-                            }
+                    zoomableView.post(() -> {
+                        if (decorView != null) {
+                            ViewCompat.setBackground(placeholderView, null);
+                            zoomableView.setDrawingCacheEnabled(false);
                         }
                     });
 
@@ -126,13 +125,11 @@ public class ImageZoomHelper {
                     MotionEvent.PointerCoords pointerCoords2 = new MotionEvent.PointerCoords();
                     ev.getPointerCoords(1, pointerCoords2);
 
-                    // storing distance between the two positions to be compared later on for
-                    // zooming
+                    // storing distance between the two positions to be compared later on for zooming
                     originalDistance = (int) getDistance(pointerCoords1.x, pointerCoords2.x,
                             pointerCoords1.y, pointerCoords2.y);
 
-                    // storing center point of the two pointers to move the view according to the
-                    // touch position
+                    // storing center point of the two pointers to move the view according to the touch position
                     twoPointCenter = new int[]{
                             (int) ((pointerCoords2.x + pointerCoords1.x) / 2),
                             (int) ((pointerCoords2.y + pointerCoords1.y) / 2)
@@ -170,8 +167,8 @@ public class ImageZoomHelper {
                 updateZoomableViewMargins(newCenter[0] - twoPointCenter[0] + originalXY[0],
                         newCenter[1] - twoPointCenter[1] + originalXY[1]);
 
-                darkView.setAlpha((float) (pctIncrease / 8));
-
+                final int step = 8;
+                darkView.setAlpha((float) (pctIncrease / step));
                 return true;
             }
         } else {
@@ -192,21 +189,16 @@ public class ImageZoomHelper {
 
                 final ValueAnimator valueAnimator = ValueAnimator.ofFloat(0f, 1f);
                 valueAnimator.setDuration(activity.getResources().getInteger(android.R.integer.config_shortAnimTime));
-                valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                valueAnimator.addUpdateListener(animator -> {
+                    float animatedFraction = animator.getAnimatedFraction();
+                    if (zoomableView != null) {
+                        updateZoomableView(animatedFraction, scaleYStart, scaleXStart,
+                                leftMarginStart, topMarginStart,
+                                scaleXEnd, scaleYEnd, leftMarginEnd, topMarginEnd);
+                    }
 
-                    @Override
-                    public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                        float animatedFraction = valueAnimator.getAnimatedFraction();
-                        if (zoomableView != null) {
-                            updateZoomableView(animatedFraction, scaleYStart, scaleXStart,
-                                    leftMarginStart, topMarginStart,
-                                    scaleXEnd, scaleYEnd, leftMarginEnd, topMarginEnd);
-                        }
-
-                        if (darkView != null) {
-                            darkView.setAlpha(((alphaEnd - alphaStart) * animatedFraction) +
-                                    alphaStart);
-                        }
+                    if (darkView != null) {
+                        darkView.setAlpha(((alphaEnd - alphaStart) * animatedFraction) + alphaStart);
                     }
                 });
                 valueAnimator.addListener(new AnimatorListenerAdapter() {
@@ -235,14 +227,13 @@ public class ImageZoomHelper {
                     }
                 });
                 valueAnimator.start();
-
                 return true;
             }
         }
-
         return false;
     }
 
+    @SuppressWarnings("checkstyle:parameternumber")
     private void updateZoomableView(float animatedFraction, float scaleYStart,
                                     float scaleXStart, int leftMarginStart,
                                     int topMarginStart, float scaleXEnd, float scaleYEnd,
@@ -304,10 +295,11 @@ public class ImageZoomHelper {
 
     private void sendZoomEventToListeners(View zoomableView, boolean zoom) {
         for (OnZoomListener onZoomListener : zoomListeners) {
-            if (zoom)
+            if (zoom) {
                 onZoomListener.onImageZoomStarted(zoomableView);
-            else
+            } else {
                 onZoomListener.onImageZoomEnded(zoomableView);
+            }
         }
     }
 
@@ -353,7 +345,7 @@ public class ImageZoomHelper {
             for (int i = 0; i < childCount; i++) {
                 View child = viewGroup.getChildAt(i);
 
-                if (child.getTag(R.id.unzoomable) == null) {
+                if ((getIntTag(child) & FLAG_UNZOOMABLE) == 0) {
                     Rect visibleRect = new Rect();
                     int[] location = new int[2];
                     child.getLocationOnScreen(location);
@@ -362,9 +354,9 @@ public class ImageZoomHelper {
                     visibleRect.right = visibleRect.left + child.getWidth();
                     visibleRect.bottom = visibleRect.top + child.getHeight();
 
-                    if (visibleRect.contains((int) pointerCoords1.x, (int) pointerCoords1.y) &&
-                            visibleRect.contains((int) pointerCoords2.x, (int) pointerCoords2.y)) {
-                        return child.getTag(R.id.zoomable) != null ? child : findZoomableView(event, child);
+                    if (visibleRect.contains((int) pointerCoords1.x, (int) pointerCoords1.y)
+                            && visibleRect.contains((int) pointerCoords2.x, (int) pointerCoords2.y)) {
+                        return (getIntTag(child) & FLAG_ZOOMABLE) != 0 ? child : findZoomableView(event, child);
                     }
                 }
             }
@@ -373,23 +365,16 @@ public class ImageZoomHelper {
         return null;
     }
 
-    /**
-     * Set view to be zoomable
-     *
-     * @param view the view to be zoomable
-     */
-    public static void setViewZoomable(View view) {
-        view.setTag(R.id.zoomable, new Object());
+    private static int getIntTag(View view) {
+        return view.getTag() == null ? 0 : (int)view.getTag();
     }
 
-    /**
-     * Enable or disable zoom for view and it's children
-     *
-     * @param view the view to be zoomable
-     * @param enabled enable the zoomable
-     */
-    public static void setZoom(View view, boolean enabled) {
-        view.setTag(R.id.unzoomable, enabled ? null : new Object());
+    public static void setViewZoomable(View view) {
+        view.setTag(getIntTag(view) | FLAG_ZOOMABLE);
+    }
+
+    public static void setZoomEnabled(View view, boolean enabled) {
+        view.setTag(enabled ? getIntTag(view) | FLAG_UNZOOMABLE : getIntTag(view) & ~FLAG_UNZOOMABLE);
     }
 
     public interface OnZoomListener {
